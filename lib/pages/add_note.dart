@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:task_hive/models/task.dart';
+import 'package:task_hive/providers/task_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class AddTaskPage extends StatefulWidget {
   @override
@@ -13,6 +17,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   String _selectedPriority = 'Medium';
   String _selectedCategory = 'Personal';
+  TextEditingController _titleController = TextEditingController();
+  TextEditingController _descriptionController = TextEditingController();
 
   // Custom color constants (matching home page)
   static const primaryColor = Color(0xFF4CAF50);
@@ -83,6 +89,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   Widget _buildTaskTitleField() {
     return TextFormField(
+      controller: _titleController,
       style: GoogleFonts.poppins(
         fontSize: 16,
         color: textColorPrimary,
@@ -117,6 +124,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   Widget _buildTaskDescriptionField() {
     return TextFormField(
+      controller: _descriptionController,
       maxLines: 3,
       style: GoogleFonts.poppins(
         fontSize: 16,
@@ -388,8 +396,21 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   void _submitForm() {
+    final provider = Provider.of<TaskProvider>(context, listen: false);
     if (_formKey.currentState!.validate()) {
       // TODO: Implement task creation logic
+      provider.addTask(
+        Task(
+          id: Uuid().v4(),
+          userId: 'user1',
+          title: _titleController.text,
+          description: _descriptionController.text,
+          isCompleted: false,
+          dueDate: DateTime.now(),
+        ),
+      );
+      print('Task added: ${_titleController.text}');
+      // print('Task description: ${_descriptionController.text}');
       Navigator.pop(context);
     }
   }

@@ -75,7 +75,7 @@ Task Hive is a beautifully crafted, open-source task management application buil
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/task-hive.git
+git clone https://github.com/crindalwalt/TaskHive.git
 ```
 
 2. Navigate to project directory

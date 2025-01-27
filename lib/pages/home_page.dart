@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:task_hive/models/task.dart';
 import 'package:task_hive/pages/add_note.dart';
+import 'package:task_hive/providers/task_provider.dart';
 
 class HomePage extends StatelessWidget {
   // Custom color constants
@@ -20,9 +23,9 @@ class HomePage extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             _buildAppBar(),
-            _buildDashboardCards(),
+            _buildDashboardCards(context),
             _buildFilterSection(),
-            _buildTaskList(),
+            _buildTaskList(context),
           ],
         ),
       ),
@@ -55,7 +58,11 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildDashboardCards() {
+  Widget _buildDashboardCards(BuildContext context) {
+    final taskProvider = Provider.of<TaskProvider>(context);
+    int totalTasks = taskProvider.getTotalTaskCount();
+    int completedTasks = taskProvider.getCompletedTaskCount();
+    int pendingTasks = taskProvider.getPendingTaskCount();
     return SliverToBoxAdapter(
       child: Container(
         height: 160,
@@ -65,19 +72,19 @@ class HomePage extends StatelessWidget {
           children: [
             _buildMetricCard(
               'Tasks Today',
-              '12',
+              totalTasks.toString(),
               Icons.today,
               [Color(0xFF4CAF50), Color(0xFF45B649)],
             ),
             _buildMetricCard(
               'Pending',
-              '5',
+              pendingTasks.toString(),
               Icons.pending_actions,
               [Color(0xFFFFC107), Color(0xFFFFEB3B)],
             ),
             _buildMetricCard(
               'Completed',
-              '18',
+              completedTasks.toString(),
               Icons.task_alt,
               [Color(0xFF03A9F4), Color(0xFF00BCD4)],
             ),
@@ -173,22 +180,24 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskList() {
+  Widget _buildTaskList(BuildContext context) {
+    final tasks = Provider.of<TaskProvider>(context);
+    List<Task> taskList = tasks.tasks;
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-        (context, index) => _buildTaskCard(
-          'Task ${index + 1}',
-          'This is a description for task ${index + 1}. It demonstrates how multiple lines of text would appear.',
-          DateTime.now().add(Duration(days: index)),
-          index % 3 == 0,
-        ),
-        childCount: 10,
+        childCount: taskList.length,
+        (context, index) {
+          Task task = taskList[index];
+          return _buildTaskCard(
+            task,
+            tasks.toggleTaskCompletion,
+          );
+        },
       ),
     );
   }
 
-  Widget _buildTaskCard(
-      String title, String description, DateTime dueDate, bool isCompleted) {
+  Widget _buildTaskCard(Task task, Function toggleTaskCompletion) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Card(
@@ -206,7 +215,7 @@ class HomePage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        title,
+                        task.title,
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -215,15 +224,17 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                     Checkbox(
-                      value: isCompleted,
-                      onChanged: (value) {},
+                      value: task.isCompleted,
+                      onChanged: (value) {
+                        toggleTaskCompletion(task.id);
+                      },
                       activeColor: primaryColor,
                     ),
                   ],
                 ),
                 SizedBox(height: 8),
                 Text(
-                  description,
+                  task.description,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: textColorSecondary,
@@ -241,7 +252,7 @@ class HomePage extends StatelessWidget {
                     ),
                     SizedBox(width: 4),
                     Text(
-                      DateFormat('MMM dd, yyyy').format(dueDate),
+                      DateFormat('MMM dd, yyyy').format(task.dueDate),
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: textColorSecondary,
